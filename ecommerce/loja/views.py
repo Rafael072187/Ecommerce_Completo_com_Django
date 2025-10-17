@@ -19,7 +19,14 @@ def loja(request, nome_categoria=None):
 
 def ver_produto(request, id_produto):
     produto = Produto.objects.get(id=id_produto)
-    context = {"produto":produto}
+    itens_estoque = ItemEstoque.objects.filter(produto=produto, quantidade__gt=0)
+    if len(itens_estoque) > 0:
+        tem_estoque = True
+        cores = {item.cor for item in itens_estoque}
+    else:
+        tem_estoque = False
+        cores = []
+    context = {"produto":produto, "itens_estoque": itens_estoque, "tem_estoque":tem_estoque, "cores": cores}
     return render(request, "ver_produto.html", context)
 
 
