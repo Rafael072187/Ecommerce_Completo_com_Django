@@ -1,20 +1,17 @@
-from .models import Pedido, ItensPedido
+from .models import Pedido, ItensPedido, Cliente
 
 def carrinho(request):
     quantidade_produtos_carrinho = 0
-    cliente = None
-    pedido = None
-
     if request.user.is_authenticated:
-        try:
-            cliente = request.user.cliente
-            pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
-            itens_pedido = ItensPedido.objects.filter(pedido=pedido)
-            for item in itens_pedido:
-                quantidade_produtos_carrinho += item.quantidade
-        except Exception as e:
-            print("Erro ao acessar carrinho autenticado:", e)
+        cliente = request.user.cliente
     else:
-        print("Usuário não logado — carrinho vazio")
-
+        if request.COOKIES.get("id_sessao"):
+            id_sessao = request.COOKIES.get("id_sessao")
+            cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+        else:
+            return {"quantidade_produtos_carrinho":quantidade_produtos_carrinho}
+    pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
+    itens_pedido = ItensPedido.objects.filter(pedido=pedido)
+    for item in itens_pedido:
+        quantidade_produtos_carrinho += item.quantidade
     return {"quantidade_produtos_carrinho": quantidade_produtos_carrinho}

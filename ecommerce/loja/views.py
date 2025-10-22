@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import *
+import uuid
 
 # Create your views here.
 def homepage(request):
@@ -36,58 +37,108 @@ def ver_produto(request, id_produto, id_cor=None):
 def adicionar_carrinho(request, id_produto):
     if request.method == "POST" and id_produto:
         dados = request.POST.dict()
-        print(dados)
         tamanho = dados.get("tamanho")
         id_cor = dados.get("cor")
         if not tamanho:
             return redirect('loja')
         # pegar o cliente
+        resposta = redirect('carrinho')
         if request.user.is_authenticated:
             cliente = request.user.cliente
         else:
-            return redirect('loja')
+            if request.COOKIES.get("id_sessao"):
+                id_sessao = request.COOKIES.get("id_sessao")
+            else:
+                id_sessao = str(uuid.uuid4())
+                resposta.set_cookie(key="id_sessao", value=id_sessao, max_age=60*60*24*30)
+            cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
         pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
         item_estoque = ItemEstoque.objects.get(produto__id=id_produto, tamanho=tamanho, cor__id=id_cor)
         item_pedido, criado = ItensPedido.objects.get_or_create(item_estoque=item_estoque, pedido=pedido)
         item_pedido.quantidade += 1
         item_pedido.save()
+        return resposta
+    else:
+        return redirect('loja')
+
+
+def remover_carrinho(request, id_produto):
+    if request.method == "POST" and id_produto:
+        dados = request.POST.dict()
+        tamanho = dados.get("tamanho")
+        id_cor = dados.get("cor")
+        if not tamanho:
+            return redirect('loja')
+        if request.user.is_authenticated:
+            cliente = request.user.cliente
+        else:
+            if request.COOKIES.get("id_sessao"):
+                id_sessao = request.COOKIES.get("id_sessao")
+                cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+            else:
+                return redirect('loja')
+        pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
+        item_estoque = ItemEstoque.objects.get(produto__id=id_produto, tamanho=tamanho, cor__id=id_cor)
+        item_pedido, criado = ItensPedido.objects.get_or_create(item_estoque=item_estoque, pedido=pedido)
+        item_pedido.quantidade -= 1
+        item_pedido.save()
+        if item_pedido.quantidade <= 0:
+            item_pedido.delete()
         return redirect('carrinho')
     else:
         return redirect('loja')
 
 
-def remover_carrinho(request):
-    return redirect('carrinho')
-
-
 def carrinho(request):
     if request.user.is_authenticated:
-        try:
-            cliente = request.user.cliente
-        except Cliente.DoesNotExist:
-            cliente = Cliente.objects.create(
-                usuario=request.user,
-                email=request.user.email,
-                nome=request.user.username
-            )
-            print(f"🧩 Cliente criado automaticamente para o usuário: {request.user.username}")
+        cliente = request.user.cliente
     else:
-        print("🟠 Usuário não logado — carrinho vazio")
-        return render(request, 'carrinho.html', {"itens_pedido": [], "pedido": None})
-
-    # Cria ou busca pedido não finalizado
+        if request.COOKIES.get("id_sessao"):
+            id_sessao = request.COOKIES.get("id_sessao")
+            cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+        else:
+            context = {"cliente_existente": False, "itens_pedido": None, "pedido": None}
+            return render(request, 'carrinho.html', context)
     pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
-
-    # Busca os itens associados a esse pedido
     itens_pedido = ItensPedido.objects.filter(pedido=pedido)
-
-    context = {"itens_pedido": itens_pedido, "pedido": pedido}
+    context = {"itens_pedido": itens_pedido, "pedido": pedido, "cliente_existente": True}
     return render(request, 'carrinho.html', context)
 
 
 def checkout(request):
-    return render(request, 'checkout.html')
+    if request.user.is_authenticated:
+        cliente = request.user.cliente
+    else:
+        if request.COOKIES.get("id_sessao"):
+            id_sessao = request.COOKIES.get("id_sessao")
+            cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+        else:
+            return redirect('loja')
+    pedido, criado = Pedido.objects.get_or_create(cliente=cliente, finalizado=False)
+    enderecos = Endereco.objects.filter(cliente=cliente)
+    context = {"pedido": pedido, "enderecos": enderecos}
+    return render(request, 'checkout.html', context)
 
+def adicionar_endereco(request):
+    if request.method == "POST":
+        #trata o envio do formulario
+        if request.user.is_authenticated:
+            cliente = request.user.cliente
+        else:
+            if request.COOKIES.get("id_sessao"):
+                id_sessao = request.COOKIES.get("id_sessao")
+                cliente, criado = Cliente.objects.get_or_create(id_sessao=id_sessao)
+            else:
+                return redirect('loja')
+            dados = request.POST.dict()
+            endereco = Endereco.objects.create(cliente=cliente, rua=dados.get("rua"), numero=int(dados.get("numero")),
+                                               estado=dados.get("estado"), cidade=dados.get("cidade"),
+                                               cep=dados.get("cep"), complemento=dados.get("complemento"))
+            endereco.save()
+            return redirect("checkout")
+    else:
+        context = {}
+        return render(request, "adicionar_endereco.html", context)
 
 def minha_conta(request):
     return render(request, 'usuario/minha_conta.html')
