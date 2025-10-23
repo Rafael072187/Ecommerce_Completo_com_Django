@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .models import *
 import uuid
+from .utils import filtrar_produtos, preco_minimo_maximo
 
 # Create your views here.
 def homepage(request):
@@ -8,11 +9,12 @@ def homepage(request):
     context = {"banners": banners}
     return render(request, 'homepage.html', context)
 
-def loja(request, nome_categoria=None):
+def loja(request, filtro=None):
     produtos = Produto.objects.filter(ativo=True)
-    if nome_categoria:
-        produtos = produtos.filter(categoria__nome=nome_categoria)
-    context = {"produtos": produtos}
+    produtos = filtrar_produtos(produtos, filtro)
+    tamanhos = ["P", "M", "G"]
+    minimo, maximo = preco_minimo_maximo(produtos)
+    context = {"produtos": produtos, "minimo": minimo, "maximo": maximo, "tamanhos":tamanhos}
     return render(request, 'loja.html', context)
 
 def ver_produto(request, id_produto, id_cor=None):
