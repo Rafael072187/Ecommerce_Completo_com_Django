@@ -10,11 +10,31 @@ def filtrar_produtos(produtos, filtro):
     return produtos
 
 def preco_minimo_maximo(produtos):
-    minimo = 0
-    maximo = 0
-    if len(produtos) > 0:
-        maximo = list(produtos.aggregate(Max("preco")).values())[0]
-        maximo = round(maximo, 2)
-        minimo = list(produtos.aggregate(Min("preco")).values())[0]
-        minimo = round(minimo, 2)
-    return minimo, maximo
+    if not produtos:
+        return 0, 0
+
+    # se for queryset
+    if hasattr(produtos, "aggregate"):
+        maximo = produtos.aggregate(Max("preco"))["preco__max"]
+        minimo = produtos.aggregate(Min("preco"))["preco__min"]
+    else:
+        # se for lista
+        precos = [p.preco for p in produtos if hasattr(p, "preco")]
+        maximo = max(precos) if precos else 0
+        minimo = min(precos) if precos else 0
+
+    return round(minimo, 2), round(maximo, 2)
+
+
+def ordenar_produtos(produtos, ordem):
+    if ordem == "MenorPreco":
+        produtos = produtos.order_by("preco")
+    elif ordem == "MaiorPreco":
+        produtos = produtos.order_by("-preco")
+    elif ordem == "MaisVendidos":
+        lista_produtos = []
+        for produto in produtos:
+            lista_produtos.append((produto.total_vendas(), produto))
+        lista_produtos = sorted(lista_produtos, key=lambda x: x[0], reverse=True)
+        produtos = [item[1] for item in lista_produtos]
+    return produtos
