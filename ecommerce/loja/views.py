@@ -3,6 +3,7 @@ from .models import *
 import uuid
 from .utils import filtrar_produtos, preco_minimo_maximo, ordenar_produtos
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
@@ -168,9 +169,21 @@ def adicionar_endereco(request):
     else:
         context = {}
         return render(request, "adicionar_endereco.html", context)
+    
 
+@login_required
 def minha_conta(request):
     return render(request, 'usuario/minha_conta.html')
+
+
+@login_required
+def meus_pedidos(request):
+    cliente = request.user.cliente
+    pedidos = Pedido.objects.filter(finalizado=True, cliente=cliente).order_by("-data_finalizacao")
+
+    context = {"pedidos": pedidos}
+    return render(request, "usuario/meus_pedidos.html", context)
+
 
 def fazer_login(request):
     erro = False
@@ -233,5 +246,7 @@ def criar_conta(request):
     context = {"erro": erro}
     return render(request, "usuario/criar_conta.html", context)
 
-# TODO sempre que o usuario criar uma conta no nosso site a gente vai criar um cliente para ele
-# TODO criar uma conta do usuario colocar o username dele igual ao email
+@login_required
+def fazer_logout(request):
+    logout(request)
+    return redirect("fazer_login")
