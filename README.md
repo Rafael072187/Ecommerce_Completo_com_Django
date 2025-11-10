@@ -115,7 +115,7 @@ API (JSON)
 
 Mídias: static/media no Django Settings
 
-</details> <p <strong>📷 Galeria</strong><br> <a href="[https://raw.githubusercontent.com/Rafael072187/Ecommerce_Completo_com_Django/main/IMAGENS/01.png](https://github.com/Rafael072187/Ecommerce_Completo_com_Django/tree/main/IMAGENS)" style="display:inline-block;margin:4px;padding:8px 12px;border-<a href="https://github.com/Rafael072187/Ecommerce_Completo_com_Django/tree/main/IMAGENS" style="background:#24292F;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:600;">🔎 Ver todas as imagens</a> </p> </div>
+</details> <p <strong>📷 Galeria</strong><br> <a href="https://github.com/Rafael072187/Ecommerce_Completo_com_Django/tree/main/IMAGENS" style="display:inline-block;margin:4px;padding:8px 12px;border-<a href="https://github.com/Rafael072187/Ecommerce_Completo_com_Django/tree/main/IMAGENS" style="background:#24292F;color:#fff;padding:8px 14px;border-radius:8px;text-decoration:none;font-weight:600;">🔎 Ver todas as imagens</a> </p> </div>
 🛠️ <b>Tecnologias</b>
 
 <details> <summary><b>Stack principal (com papéis e versões quando identificáveis)</b></summary>
