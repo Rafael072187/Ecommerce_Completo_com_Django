@@ -1,4 +1,8 @@
 from django.db.models import Max, Min
+from django.core.mail import send_mail
+from django.http import HttpResponse
+import csv
+
 
 def filtrar_produtos(produtos, filtro):
     if filtro:
@@ -38,3 +42,30 @@ def ordenar_produtos(produtos, ordem):
         lista_produtos = sorted(lista_produtos, key=lambda x: x[0], reverse=True)
         produtos = [item[1] for item in lista_produtos]
     return produtos
+
+def enviar_email_compra(pedido):
+    email = pedido.cliente.email
+    assunto = f"Pedido aprovado: {pedido.id}"
+    corpo = f"""Parabéns! Seu pedido foi aprovado.
+    ID do pedido: {pedido.id}
+    Valor total: {pedido.preco_total}
+    Quantidade de produtos: {pedido.quantidade_total}"""
+    remetente = "rafinha015790@gmail.com"
+    send_mail(assunto, corpo, remetente, [email])
+
+def exportar_csv(informacoes):
+    #print(informacoes.model)
+    colunas = informacoes.model._meta.fields
+    nomes_colunas = [coluna.name for coluna in colunas]
+
+    resposta = HttpResponse(content_type="text/csv")
+
+    criador_csv = csv.writer(resposta, delimiter=";")
+    resposta["Content-Disposition"] = "attachment; filename=export.csv"
+
+    criador_csv.writerow(nomes_colunas)
+
+    for linha in informacoes.values_list():
+        criador_csv.writerow(linha)
+
+    return resposta

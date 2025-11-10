@@ -56,7 +56,10 @@ class ItemEstoque(models.Model):
     quantidade = models.IntegerField(default=0)
 
     def __str__(self) -> str:
-        return f"{self.produto.nome}, Tamanho: {self.tamanho}, Cor: {self.cor.nome}"
+        nome_produto = self.produto.nome if self.produto else "Produto indefinido"
+        nome_cor = self.cor.nome if self.cor else "Cor indefinida"
+        return f"{nome_produto}, Tamanho: {self.tamanho or '-'}, Cor: {nome_cor}"
+
 
 class Endereco(models.Model):
     rua = models.CharField(max_length=400, null=True, blank=True)
@@ -91,7 +94,11 @@ class Pedido(models.Model):
     @property
     def preco_total(self):
         itens_pedido = ItensPedido.objects.filter(pedido__id=self.id)
-        preco = sum([item.preco_total for item in itens_pedido])
+        preco = 0
+        for item in itens_pedido:
+            # evita erro se item_estoque ou produto forem None
+            if item.item_estoque and item.item_estoque.produto:
+                preco += item.quantidade * item.item_estoque.produto.preco
         return preco
     
     @property
@@ -105,11 +112,16 @@ class ItensPedido(models.Model):
     pedido = models.ForeignKey(Pedido, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self) -> str:
+        if not self.item_estoque or not self.item_estoque.produto:
+            return f"Id pedido: {self.pedido.id if self.pedido else 'N/A'} - Produto removido"
         return f"Id pedido: {self.pedido.id} - Produto: {self.item_estoque.produto.nome}, {self.item_estoque.tamanho}, {self.item_estoque.cor.nome}"
 
     @property
     def preco_total(self):
+        if not self.item_estoque or not self.item_estoque.produto:
+            return 0
         return self.quantidade * self.item_estoque.produto.preco
+
 
 class Banner(models.Model):
     imagem = models.ImageField(null=True, blank=True)
@@ -120,4 +132,8 @@ class Banner(models.Model):
         return f"{self.link_destino} - Ativo: {self.ativo}"
 
 
+class Pagamento(models.Model):
+    id_pagamento = models.CharField(max_length=400)
+    pedido = models.ForeignKey(Pedido, null=True, blank=True, on_delete=models.SET_NULL)
+    aprovado = models.BooleanField(default=False)
 

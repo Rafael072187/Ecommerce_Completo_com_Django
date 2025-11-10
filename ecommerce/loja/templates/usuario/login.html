@@ -3,20 +3,42 @@
 
 {% block body %}
 
-<h3>Faça seu Login</h3>
+<main class="principal">
+      <section class="conta">
 
-{% if erro %}
-<h3>Credenciais inválidas, tente novamente ou crie uma conta</h3>
-{% endif %}
+        <div class="conta__container">
+          <div class="checkout__titulos">
+            <p class="checkout__titulo">Faça seu Login</p>
+          </div>
 
-<form method="POST" action="{% url 'fazer_login' %}">
-    {% csrf_token %}
-    <input type="email" name="email" placeholder="Email">
-    <input type="password" name="senha" placeholder="Senha">
-    <button type="submit">Entrar</button>
-</form>
+          {% if erro %}
+            <h3>Credenciais inválidas, tente novamente ou crie uma conta</h3>
+          {% endif %}
 
-<a href="{% url 'criar_conta' %}">Não tem uma conta? Criar conta</a>
-<a href="#">Esqueci minha senha</a>
+          <form
+            class="conta__form"
+            action="{% url 'fazer_login' %}"
+            method="post"
+          >
+          {% csrf_token %}
+            <div class="conta__item">
+              <label for="email">E-mail</label>
+              <input name="email" type="email" placeholder="Email" value="{{ request.user.email }}"/>
+            </div>
+
+            <div class="conta__item">
+              <label for="senha">Senha</label>
+              <input name="senha" type="password" placeholder="Senha" />
+            </div>
+
+            <button class="subtotal__botao" type="submit">
+              Fazer Login
+            </button>
+          </form>
+          <a href="{% url 'criar_conta' %}">Não tem uma conta? Criar conta</a>
+          <a href="{% url 'password_reset' %}">Esqueci minha senha</a>
+        </div>
+      </section>
+    </main>
 
 {% endblock %}

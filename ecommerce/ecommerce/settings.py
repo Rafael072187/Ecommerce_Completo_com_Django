@@ -26,7 +26,12 @@ SECRET_KEY = 'django-insecure-p+(97%aqf5&hq23tl4^f#g8e5l89fh#*)-lu5q@prfkt3oa4dt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.ngrok-free.dev']
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
+    "https://*.ngrok-free.dev",
+]
 
 
 # Application definition
@@ -66,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'loja.novos_context.carrinho',
                 'loja.novos_context.categorias_tipos',
+                'loja.novos_context.faz_parte_equipe',
             ],
         },
     },
@@ -136,4 +142,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'fazer_login'
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+#EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_POST = 587
+EMAIL_USE_TLS = True
+
+#Coloque o seu email no qual vai host vai usar
+EMAIL_HOST_USER = "rafinha015790@gmail.com"
+
+#Coloque sua senha do app de senhas do gmail aqui
+EMAIL_HOST_PASSWORD = "nisbhtfrtfxudhko"
+
+SITE_URL = "http://127.0.0.1:8000"
